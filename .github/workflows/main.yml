@@ -212,7 +212,9 @@ jobs:
       run: ./mvnw clean deploy -DskipTests
       env:
         MAVEN_USERNAME: ${{ github.actor }}
-        MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}  notify:
+        MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
     name: Notify Teams
     runs-on: ubuntu-latest
     needs: [publish-snapshot, publish-release, publish-to-github-packages]
