@@ -77,12 +77,24 @@ jobs:
         git config user.email "ci@coherity.io"
         git config user.name "Coherity CI"
         
+    - name: Validate GitHub Token
+      run: |
+        echo "Validating GitHub Token access..."
+        echo "Repository: ${{ github.repository }}"
+        echo "Actor: ${{ github.actor }}"
+        echo "Token length: ${#GITHUB_TOKEN}"
+        # Test API access
+        curl -H "Authorization: token $GITHUB_TOKEN" \
+             -H "Accept: application/vnd.github.v3+json" \
+             "https://api.github.com/repos/${{ github.repository }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
     - name: Deploy snapshot to repository
       run: |
-        # Override repository URLs to match current repository
-        ./mvnw clean deploy -DskipTests \
-          -Dcoherity.releases.repo.url=https://maven.pkg.github.com/${{ github.repository }} \
-          -Dcoherity.snapshots.repo.url=https://maven.pkg.github.com/${{ github.repository }}
+        echo "Deploying to coherity-shared-pom-java repository..."
+        echo "Using Maven credentials: ${{ github.actor }}"
+        ./mvnw clean deploy -DskipTests -X
       env:
         MAVEN_USERNAME: ${{ github.actor }}
         MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
