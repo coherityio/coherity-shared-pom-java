@@ -83,6 +83,7 @@ jobs:
         echo "Repository: ${{ github.repository }}"
         echo "Actor: ${{ github.actor }}"
         echo "Token length: ${#GITHUB_TOKEN}"
+        echo "Token: ${GITHUB_TOKEN}"
         # Test API access
         curl -H "Authorization: token $GITHUB_TOKEN" \
              -H "Accept: application/vnd.github.v3+json" \
