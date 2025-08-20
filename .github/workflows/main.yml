@@ -91,26 +91,11 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Write Maven settings.xml
-      run: |
-        mkdir -p ~/.m2
-        cat > ~/.m2/settings.xml <<EOF
-        <settings>
-          <servers>
-            <server>
-              <id>github</id>
-              <username>${{ github.actor }}</username>
-              <password>${{ secrets.GITHUB_TOKEN }}</password>
-            </server>
-          </servers>
-        </settings>
-        EOF
-
     - name: Deploy snapshot to repository
       run: |
         echo "Deploying to coherity-shared-pom-java repository..."
         echo "Using Maven credentials: ${{ github.actor }}"
-        ./mvnw clean deploy -DskipTests -X
+        ./mvnw -s .mvn/settings.xml clean deploy -DskipTests -X
       env:
         MAVEN_USERNAME: ${{ github.actor }}
         MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
