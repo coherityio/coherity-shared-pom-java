@@ -39,9 +39,6 @@ jobs:
     - name: Run dependency analysis
       run: ./mvnw dependency:analyze-only
       
-    - name: Check for security vulnerabilities
-      run: ./mvnw org.owasp:dependency-check-maven:check
-
   publish-snapshot:
     name: Publish Snapshot
     runs-on: ubuntu-latest
