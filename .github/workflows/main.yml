@@ -76,8 +76,8 @@ jobs:
     - name: Deploy snapshot to repository
       run: ./mvnw clean deploy -DskipTests
       env:
-        MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        MAVEN_USERNAME: ${{ github.actor }}
+        MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
   publish-release:
     name: Publish Release
@@ -136,8 +136,8 @@ jobs:
     - name: Deploy release to repository
       run: ./mvnw deploy -DskipTests
       env:
-        MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        MAVEN_USERNAME: ${{ github.actor }}
+        MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         
     - name: Create GitHub Release
@@ -189,6 +189,9 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
+        server-id: coherity-snapshots
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
         
     - name: Cache Maven dependencies
       uses: actions/cache@v4
@@ -205,17 +208,11 @@ jobs:
         git config user.email "ci@coherity.io"
         git config user.name "Coherity CI"
         
-    - name: Update POM for GitHub Packages
-      run: |
-        # Add GitHub Packages distribution management
-        ./mvnw versions:set-property -Dproperty=github.packages.repository -DnewValue=https://maven.pkg.github.com/coherityio/coherity-shared-pom-java
-        
     - name: Publish to GitHub Packages
-      run: ./mvnw clean deploy -DskipTests -Dgithub.packages=true
+      run: ./mvnw clean deploy -DskipTests
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  notify:
+        MAVEN_USERNAME: ${{ github.actor }}
+        MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}  notify:
     name: Notify Teams
     runs-on: ubuntu-latest
     needs: [publish-snapshot, publish-release, publish-to-github-packages]
