@@ -159,10 +159,9 @@ jobs:
         
     - name: Deploy release to repository
       run: |
-        # Override repository URLs to match current repository
-        ./mvnw deploy -DskipTests \
-          -Dcoherity.releases.repo.url=https://maven.pkg.github.com/${{ github.repository }} \
-          -Dcoherity.snapshots.repo.url=https://maven.pkg.github.com/${{ github.repository }}
+        echo "Deploying release to coherity-shared-pom-java repository..."
+        echo "Using Maven credentials: ${{ github.actor }}"
+        ./mvnw deploy -DskipTests -X
       env:
         MAVEN_USERNAME: ${{ github.actor }}
         MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -238,10 +237,8 @@ jobs:
         
     - name: Publish to GitHub Packages
       run: |
-        # Override repository URLs to match current repository
-        ./mvnw clean deploy -DskipTests \
-          -Dcoherity.releases.repo.url=https://maven.pkg.github.com/${{ github.repository }} \
-          -Dcoherity.snapshots.repo.url=https://maven.pkg.github.com/${{ github.repository }}
+        echo "Publishing to coherity-shared-pom-java repository..."
+        ./mvnw clean deploy -DskipTests -X
       env:
         MAVEN_USERNAME: ${{ github.actor }}
         MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
