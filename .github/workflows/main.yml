@@ -1,0 +1,229 @@
+name: Publish Shared POM
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate POM
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Validate POM structure
+      run: ./mvnw validate
+      
+    - name: Run dependency analysis
+      run: ./mvnw dependency:analyze-only
+      
+    - name: Check for security vulnerabilities
+      run: ./mvnw org.owasp:dependency-check-maven:check
+
+  publish-snapshot:
+    name: Publish Snapshot
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        server-id: coherity-snapshots
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Configure Git user
+      run: |
+        git config user.email "ci@coherity.io"
+        git config user.name "Coherity CI"
+        
+    - name: Deploy snapshot to repository
+      run: ./mvnw clean deploy -DskipTests
+      env:
+        MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+
+  publish-release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: validate
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        server-id: coherity-releases
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+        gpg-passphrase: GPG_PASSPHRASE
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Configure Git user
+      run: |
+        git config user.email "ci@coherity.io"
+        git config user.name "Coherity CI"
+        
+    - name: Extract version from tag
+      id: extract_version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Extracted version: $VERSION"
+        
+    - name: Update POM version
+      run: |
+        ./mvnw versions:set -DnewVersion=${{ steps.extract_version.outputs.version }} -DgenerateBackupPoms=false
+        
+    - name: Build and sign artifacts
+      run: ./mvnw clean package gpg:sign
+      env:
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        
+    - name: Deploy release to repository
+      run: ./mvnw deploy -DskipTests
+      env:
+        MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ steps.extract_version.outputs.version }}
+        body: |
+          ## Coherity Shared POM ${{ steps.extract_version.outputs.version }}
+          
+          This release contains the shared parent POM for Coherity Java projects.
+          
+          ### Maven Coordinates:
+          ```xml
+          <parent>
+            <groupId>io.coherity.shared.parent.reactor</groupId>
+            <artifactId>master-pom</artifactId>
+            <version>${{ steps.extract_version.outputs.version }}</version>
+          </parent>
+          ```
+          
+          ### Changes:
+          - See commit history for detailed changes
+          
+          ### Requirements:
+          - Java 21+
+          - Maven 3.9.9+ (or use included Maven wrapper)
+        draft: false
+        prerelease: false
+
+  publish-to-github-packages:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    
+    permissions:
+      contents: read
+      packages: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Configure Git user
+      run: |
+        git config user.email "ci@coherity.io"
+        git config user.name "Coherity CI"
+        
+    - name: Update POM for GitHub Packages
+      run: |
+        # Add GitHub Packages distribution management
+        ./mvnw versions:set-property -Dproperty=github.packages.repository -DnewValue=https://maven.pkg.github.com/coherityio/coherity-shared-pom-java
+        
+    - name: Publish to GitHub Packages
+      run: ./mvnw clean deploy -DskipTests -Dgithub.packages=true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify Teams
+    runs-on: ubuntu-latest
+    needs: [publish-snapshot, publish-release, publish-to-github-packages]
+    if: always()
+    
+    steps:
+    - name: Notify success
+      if: needs.publish-snapshot.result == 'success' || needs.publish-release.result == 'success'
+      run: |
+        echo "✅ Shared POM published successfully!"
+        echo "Branch/Tag: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        
+    - name: Notify failure
+      if: needs.publish-snapshot.result == 'failure' || needs.publish-release.result == 'failure'
+      run: |
+        echo "❌ Shared POM publication failed!"
+        echo "Branch/Tag: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        exit 1
