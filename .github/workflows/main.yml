@@ -95,7 +95,7 @@ jobs:
       run: |
         echo "Deploying to coherity-shared-pom-java repository..."
         echo "Using Maven credentials: ${{ github.actor }}"
-        ./mvnw -s .github/workflows/settings.xml clean deploy -DskipTests -X
+        ./mvnw -s .github/workflows/ci-settings.xml clean deploy -DskipTests -X
       env:
         MAVEN_USERNAME: ${{ github.actor }}
         MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -162,7 +162,7 @@ jobs:
       run: |
         echo "Deploying release to coherity-shared-pom-java repository..."
         echo "Using Maven credentials: ${{ github.actor }}"
-        ./mvnw -s .github/workflows/settings.xml deploy -DskipTests -X
+        ./mvnw -s .github/workflows/ci-settings.xml deploy -DskipTests -X
       env:
         MAVEN_USERNAME: ${{ github.actor }}
         MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -239,7 +239,7 @@ jobs:
     - name: Publish to GitHub Packages
       run: |
         echo "Publishing to coherity-shared-pom-java repository..."
-        ./mvnw -s .github/workflows/settings.xml clean deploy -DskipTests -X
+        ./mvnw -s .github/workflows/ci-settings.xml clean deploy -DskipTests -X
       env:
         MAVEN_USERNAME: ${{ github.actor }}
         MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
