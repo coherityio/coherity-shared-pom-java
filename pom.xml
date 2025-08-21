@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>io.coherity.shared.parent</groupId>
-	<artifactId>coherity-shared-pom-java</artifactId>
+	<artifactId>parent-pom-java</artifactId>
 	<name>Coherity Parent POM for Java</name>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -40,8 +40,7 @@
 		<maven-surefire-plugin.version>3.5.0</maven-surefire-plugin.version>
 		
 		<!-- Repository URLs - can be overridden via system properties -->
-		<coherity.releases.repo.url>https://maven.pkg.github.com/coherityio/coherity-shared-pom-java</coherity.releases.repo.url>
-		<coherity.snapshots.repo.url>https://maven.pkg.github.com/coherityio/coherity-shared-pom-java</coherity.snapshots.repo.url>
+		<project.repo.url>https://maven.pkg.github.com/coherityio/parent-pom-java</project.repo.url>
 	</properties>
 
 	<repositories>
@@ -62,14 +61,14 @@
 
 	<distributionManagement>
 		<repository>
-			<id>coherity-releases</id>
-			<name>Coherity Releases</name>
-			<url>${coherity.releases.repo.url}</url>
+			<id>coherity-parent-pom-java-repo</id>
+			<name>Coherity Parent Pom Java Repo</name>
+			<url>${project.repo.url}</url>
 		</repository>
 		<snapshotRepository>
-			<id>coherity-snapshots</id>
-			<name>Coherity Snapshots</name>
-			<url>${coherity.snapshots.repo.url}</url>
+			<id>coherity-parent-pom-java-repo</id>
+			<name>Coherity Parent Pom Java Snapshots Repo </name>
+			<url>${project.repo.url}</url>
 		</snapshotRepository>
 	</distributionManagement>
 	
