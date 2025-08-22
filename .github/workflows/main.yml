@@ -201,7 +201,7 @@ jobs:
   notify:
     name: Notify Teams
     runs-on: ubuntu-latest
-    needs: [publish-snapshot, publish-release, publish-to-github-packages]
+    needs: [publish-snapshot, publish-release]
     if: always()
     
     steps:
