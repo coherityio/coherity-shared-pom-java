@@ -26,6 +26,8 @@
 		<jacoco.version>0.8.12</jacoco.version>
 		<maven-dependency-plugin.version>3.8.0</maven-dependency-plugin.version>
 		<mockito.version>5.14.0</mockito.version>
+		<byte-buddy.version>1.14.17</byte-buddy.version>
+		<assertj.version>3.25.3</assertj.version>
 		<commons-lang3.version>3.17.0</commons-lang3.version>
 		<commons-collections4.version>4.4</commons-collections4.version>
 		<commons-io.version>2.16.1</commons-io.version>
@@ -43,22 +45,6 @@
 		<project.repo.url>https://maven.pkg.github.com/coherityio/parent-pom-java</project.repo.url>
 	</properties>
 
-	<repositories>
-		<!-- Commented out embedded repositories -->
-		<!--
-		<repository>
-			<id>embedded</id>
-			<name>Embedded Repository</name>
-			<url>file://${project.basedir}/repository</url>
-		</repository>
-		<repository>
-			<id>embedded</id>
-			<name>Embedded Repository</name>
-			<url>file://${session.executionRootDirectory}/repository</url>
-		</repository>
-		-->
-	</repositories>
-
 	<distributionManagement>
 		<repository>
 			<id>coherity-parent-pom-java-repo</id>
@@ -72,34 +58,6 @@
 		</snapshotRepository>
 	</distributionManagement>
 	
-	<profiles>
-		<profile>
-			<id>sign-artifacts</id>
-			<activation>
-				<property>
-					<name>gpg.keyname</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>3.2.4</version>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 	<dependencyManagement>
 		<dependencies>
 		
@@ -147,28 +105,29 @@
 				<artifactId>commons-math3</artifactId>
 				<version>${commons-math3.version}</version>
 			</dependency>
-
-			<!-- ================================================ -->
-			<!-- LOGGING -->
-			<!-- ================================================ -->
-			<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-api</artifactId>
-				<version>${slf4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>ch.qos.logback</groupId>
-				<artifactId>logback-classic</artifactId>
-				<version>1.5.7</version>
-			</dependency>
-
 			
 			<!-- ================================================ -->
 			<!-- TEST -->
 			<!-- ================================================ -->
+			<!-- JUnit BOM for version management -->
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			
+			<!-- JUnit Jupiter Dependencies -->
 			<dependency>
 				<groupId>org.junit.jupiter</groupId>
 				<artifactId>junit-jupiter</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-api</artifactId>
 				<version>${junit.version}</version>
 				<scope>test</scope>
 			</dependency>
@@ -178,12 +137,22 @@
 				<version>${junit.version}</version>
 				<scope>test</scope>
 			</dependency>
+			
+			<!-- JUnit Platform Dependencies -->
+			<dependency>
+				<groupId>org.junit.platform</groupId>
+				<artifactId>junit-platform-engine</artifactId>
+				<version>${junit-platform.version}</version>
+				<scope>test</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.junit.platform</groupId>
 				<artifactId>junit-platform-launcher</artifactId>
 				<version>${junit-platform.version}</version>
 				<scope>test</scope>
 			</dependency>
+			
+			<!-- Mockito Dependencies -->
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-core</artifactId>
@@ -196,25 +165,26 @@
 				<version>${mockito.version}</version>
 				<scope>test</scope>
 			</dependency>
+			
+			<!-- ByteBuddy (used by Mockito) -->
+			<dependency>
+				<groupId>net.bytebuddy</groupId>
+				<artifactId>byte-buddy</artifactId>
+				<version>${byte-buddy.version}</version>
+				<scope>test</scope>
+			</dependency>
+			
+			<!-- AssertJ -->
+			<dependency>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>${assertj.version}</version>
+				<scope>test</scope>
+			</dependency>
 
 		</dependencies>
 	</dependencyManagement>
 
-
-	<dependencies>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-junit-jupiter</artifactId>
-		</dependency>
-	</dependencies>
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -269,4 +239,34 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>sign-artifacts</id>
+			<activation>
+				<property>
+					<name>gpg.keyname</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>3.2.4</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 </project>
