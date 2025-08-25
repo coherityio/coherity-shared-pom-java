@@ -28,6 +28,7 @@
 		<mockito.version>5.14.0</mockito.version>
 		<byte-buddy.version>1.14.17</byte-buddy.version>
 		<assertj.version>3.25.3</assertj.version>
+		<lombok.version>1.18.34</lombok.version>
 		<commons-lang3.version>3.17.0</commons-lang3.version>
 		<commons-collections4.version>4.4</commons-collections4.version>
 		<commons-io.version>2.16.1</commons-io.version>
@@ -181,6 +182,14 @@
 				<version>${assertj.version}</version>
 				<scope>test</scope>
 			</dependency>
+			
+			<!-- Lombok -->
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+				<optional>true</optional>
+			</dependency>
 
 		</dependencies>
 	</dependencyManagement>
@@ -195,6 +204,14 @@
 					<configuration>
 						<source>${maven.compiler.source}</source>
 						<target>${maven.compiler.target}</target>
+						<encoding>${project.build.sourceEncoding}</encoding>
+						<annotationProcessorPaths>
+							<path>
+								<groupId>org.projectlombok</groupId>
+								<artifactId>lombok</artifactId>
+								<version>${lombok.version}</version>
+							</path>
+						</annotationProcessorPaths>
 					</configuration>
 				</plugin>
 
